@@ -29,3 +29,11 @@ class ProfileModel:
         # Inserts a new document into the MongoDB collection
         self.collection.insert_one(data)
         
+    def get_all_profiles(self):
+        # Retrieves all documents from the MongoDB collection
+        return list(self.collection.find({}))
+
+    def delete_profile(self, profile_game):
+        # Deletes a document from the collection based on the game name
+        self.collection.delete_one({"game": profile_game})
+        
