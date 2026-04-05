@@ -23,5 +23,8 @@ class ProfileModel:
         self.pool = pool
         client = self.pool.acquire()
         self.collection = client.get_database("engine_optimizer_db").get_collection("game_profiles")
-        
         self.pool.release(client)
+    def insert_profile(self, data):
+        # Inserts a new document into the MongoDB collection
+        self.collection.insert_one(data)
+        
