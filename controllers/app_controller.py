@@ -16,6 +16,7 @@ class AppController:
             "gpu": gpu,
             "ini_data": ini_data
         }
+        print(f"DEBUG: Button clicked. Sending this exact payload to model: {data}")
         self.model.insert_profile(data)
 
     def load_profiles(self):

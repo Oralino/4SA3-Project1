@@ -26,17 +26,17 @@ class EngineOptimizerView:
         self.ini_text = tk.Text(root, height=5)
         self.ini_text.pack()
 
-        # Creates the action buttons for the interface
-        self.save_button = tk.Button(root, text="Save Profile")
+        # Creates the action buttons and links them to their respective functions
+        self.save_button = tk.Button(root, text="Save Profile", command=self.save_profile)
         self.save_button.pack()
 
-        self.load_button = tk.Button(root, text="Load Profiles")
+        self.load_button = tk.Button(root, text="Load Profiles", command=self.load_profiles)
         self.load_button.pack()
 
-        self.delete_button = tk.Button(root, text="Delete Profile")
+        self.delete_button = tk.Button(root, text="Delete Profile", command=self.delete_profile)
         self.delete_button.pack()
 
-        self.shop_button = tk.Button(root, text="Find PC Shops")
+        self.shop_button = tk.Button(root, text="Find PC Shops", command=self.find_shops)
         self.shop_button.pack()
 
         # Creates the list area to display database records and map results
@@ -48,7 +48,9 @@ class EngineOptimizerView:
         game = self.game_entry.get()
         gpu = self.gpu_entry.get()
         ini_data = self.ini_text.get("1.0", tk.END).strip()
+        print(f"button clicked")
         self.controller.save_profile(game, gpu, ini_data)
+     
 
     def load_profiles(self):
         # Requests all profiles from the controller and displays them in the list

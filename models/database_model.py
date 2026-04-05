@@ -19,29 +19,39 @@ class ObjectPool:
         
 class ProfileModel:
     def __init__(self, pool):
-        # Stores the database pool and sets up the collection reference
+        # Stores the database pool reference for later use
         self.pool = pool
-        client = self.pool.acquire()
-        
-        # Connects to the engine optimizer database
-        self.collection = client.get_database("engine_optimizer_db").get_collection("game_profiles")
-        
-        self.pool.release(client)
 
     def insert_profile(self, data):
-        # Inserts a new document into the MongoDB collection and prints a terminal confirmation
-        print("Testing mongo connection...")
-        self.collection.insert_one(data)
+        # Acquires an active connection just for saving data
+        client = self.pool.acquire()
+        collection = client.get_database("engine_optimizer_db").get_collection("game_profiles")
+        
+        collection.insert_one(data)
         print("SUCCESS: Profile saved to MongoDB cluster.")
+        
+        # Returns the connection to the pool
+        self.pool.release(client)
 
     def get_all_profiles(self):
-        # Retrieves all documents from the MongoDB collection and prints a terminal confirmation
-        profiles = list(self.collection.find({}))
+        # Acquires an active connection just for reading data
+        client = self.pool.acquire()
+        collection = client.get_database("engine_optimizer_db").get_collection("game_profiles")
+        
+        profiles = list(collection.find({}))
         print(f"SUCCESS: Loaded {len(profiles)} profiles from MongoDB cluster.")
+        
+        # Returns the connection to the pool
+        self.pool.release(client)
         return profiles
 
     def delete_profile(self, profile_game):
-        # Deletes a document from the collection and prints a terminal confirmation
-        self.collection.delete_one({"game": profile_game})
+        # Acquires an active connection just for deleting data
+        client = self.pool.acquire()
+        collection = client.get_database("engine_optimizer_db").get_collection("game_profiles")
+        
+        collection.delete_one({"game": profile_game})
         print(f"SUCCESS: Deleted profile for {profile_game} from MongoDB cluster.")
         
+        # Returns the connection to the pool
+        self.pool.release(client)
