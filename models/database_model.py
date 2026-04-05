@@ -16,3 +16,12 @@ class ObjectPool:
     def release(self, client):
         # Adds the connection back to the reusable pool
         self.reusables.append(client)
+        
+class ProfileModel:
+    def __init__(self, pool):
+        # Stores the database pool and sets up the collection reference
+        self.pool = pool
+        client = self.pool.acquire()
+        self.collection = client.get_database("engine_optimizer_db").get_collection("game_profiles")
+        
+        self.pool.release(client)
