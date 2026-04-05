@@ -9,7 +9,7 @@ class EngineOptimizerView:
         self.root = root
         self.controller = controller
         self.root.title("Engine Optimizer")
-        self.root.geometry("600x650")
+        self.root.geometry("600x680")
 
         # Tracks what type of data is currently in the listbox
         self.list_mode = "profiles"
@@ -32,19 +32,35 @@ class EngineOptimizerView:
         # Creates a larger text area for the configuration details
         self.ini_label = tk.Label(root, text="Engine.ini Tweaks:")
         self.ini_label.pack()
-        self.ini_text = tk.Text(root, height=5)
-        self.ini_text.pack()
 
-        # Creates a frame to hold the import and export buttons side by side
+        # Creates a container frame to hold the text box and scrollbar together
+        self.text_frame = tk.Frame(root)
+        self.text_frame.pack(pady=5)
+
+        # Creates the vertical scrollbar and anchors it to the right side of the frame
+        self.scrollbar = tk.Scrollbar(self.text_frame)
+        self.scrollbar.pack(side=tk.RIGHT, fill=tk.Y)
+
+        # Creates a taller text widget and links its vertical movement to the scrollbar
+        self.ini_text = tk.Text(self.text_frame, height=10, width=50, yscrollcommand=self.scrollbar.set)
+        self.ini_text.pack(side=tk.LEFT)
+
+        # Commands the scrollbar to control the text widget
+        self.scrollbar.config(command=self.ini_text.yview)
+
+        # Creates a frame to hold the file management buttons side by side
         self.file_frame = tk.Frame(root)
         self.file_frame.pack(pady=5)
 
-        # Creates the import and export buttons
+        # Creates the import export and expand buttons
         self.import_button = tk.Button(self.file_frame, text="Import INI", command=self.import_ini)
         self.import_button.pack(side=tk.LEFT, padx=5)
 
         self.export_button = tk.Button(self.file_frame, text="Export INI", command=self.export_ini)
         self.export_button.pack(side=tk.LEFT, padx=5)
+
+        self.expand_button = tk.Button(self.file_frame, text="Expand Editor", command=self.open_expanded_editor)
+        self.expand_button.pack(side=tk.LEFT, padx=5)
 
         # Creates the action buttons and links them to the class methods below
         self.save_button = tk.Button(root, text="Save Profile", command=self.save_profile)
@@ -89,6 +105,40 @@ class EngineOptimizerView:
             with open(filepath, "w") as file:
                 file.write(content)
             print(f"SUCCESS: Saved tweaks to {filepath}")
+
+    def open_expanded_editor(self):
+        # Creates a new pop out window on top of the main application
+        editor_window = tk.Toplevel(self.root)
+        editor_window.title("Expanded Engine.ini Editor")
+        editor_window.geometry("800x600")
+
+        # Creates a container frame for the expanded text area and scrollbar
+        expand_frame = tk.Frame(editor_window)
+        expand_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=10)
+
+        # Creates the vertical scrollbar for the expanded window
+        expand_scroll = tk.Scrollbar(expand_frame)
+        expand_scroll.pack(side=tk.RIGHT, fill=tk.Y)
+
+        # Creates a massive text widget and links it to the scrollbar
+        expanded_text = tk.Text(expand_frame, yscrollcommand=expand_scroll.set)
+        expanded_text.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
+        expand_scroll.config(command=expanded_text.yview)
+
+        # Copies the current text from the main window into the expanded window
+        current_content = self.ini_text.get("1.0", tk.END)
+        expanded_text.insert("1.0", current_content)
+
+        def apply_changes():
+            # Replaces the text in the main window with the newly edited text and closes the pop out
+            new_content = expanded_text.get("1.0", tk.END).strip()
+            self.ini_text.delete("1.0", tk.END)
+            self.ini_text.insert("1.0", new_content)
+            editor_window.destroy()
+
+        # Creates a button to save the changes and close the expanded window
+        apply_button = tk.Button(editor_window, text="Apply Changes & Close", command=apply_changes)
+        apply_button.pack(pady=10)
 
     def save_profile(self):
         # Gathers input data from the text boxes and sends it to the controller
