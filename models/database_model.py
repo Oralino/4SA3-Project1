@@ -27,8 +27,13 @@ class ProfileModel:
         client = self.pool.acquire()
         collection = client.get_database("engine_optimizer_db").get_collection("game_profiles")
         
-        collection.insert_one(data)
-        print("SUCCESS: Profile saved to MongoDB cluster.")
+        # Updates the existing game profile or creates a new one if it does not exist
+        collection.update_one(
+            {"game": data["game"]}, 
+            {"$set": data}, 
+            upsert=True
+        )
+        print("SUCCESS: Profile saved or updated in MongoDB cluster.")
         
         # Returns the connection to the pool
         self.pool.release(client)
