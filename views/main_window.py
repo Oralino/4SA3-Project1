@@ -1,4 +1,7 @@
 import tkinter as tk
+from tkinter import filedialog
+import webbrowser
+import urllib.parse
 
 class EngineOptimizerView:
     def __init__(self, root, controller):
@@ -6,7 +9,10 @@ class EngineOptimizerView:
         self.root = root
         self.controller = controller
         self.root.title("Engine Optimizer")
-        self.root.geometry("600x600")
+        self.root.geometry("600x650")
+
+        # Tracks what type of data is currently in the listbox
+        self.list_mode = "profiles"
 
         # Creates a blank list to temporarily store database records in memory
         self.cached_profiles = []
@@ -29,6 +35,17 @@ class EngineOptimizerView:
         self.ini_text = tk.Text(root, height=5)
         self.ini_text.pack()
 
+        # Creates a frame to hold the import and export buttons side by side
+        self.file_frame = tk.Frame(root)
+        self.file_frame.pack(pady=5)
+
+        # Creates the import and export buttons
+        self.import_button = tk.Button(self.file_frame, text="Import INI", command=self.import_ini)
+        self.import_button.pack(side=tk.LEFT, padx=5)
+
+        self.export_button = tk.Button(self.file_frame, text="Export INI", command=self.export_ini)
+        self.export_button.pack(side=tk.LEFT, padx=5)
+
         # Creates the action buttons and links them to the class methods below
         self.save_button = tk.Button(root, text="Save Profile", command=self.save_profile)
         self.save_button.pack()
@@ -42,10 +59,36 @@ class EngineOptimizerView:
         self.shop_button = tk.Button(root, text="Find PC Shops", command=self.find_shops)
         self.shop_button.pack()
 
-        # Creates the list area and binds a double left-click event to it
+        # Creates the list area and binds a double left click event to it
         self.listbox = tk.Listbox(root, width=70)
-        self.listbox.pack()
-        self.listbox.bind("<Double-1>", self.populate_fields)
+        self.listbox.pack(pady=10)
+        self.listbox.bind("<Double-1>", self.handle_double_click)
+
+    def import_ini(self):
+        # Opens a file dialog to select a text file and loads its contents into the text box
+        filepath = filedialog.askopenfilename(
+            title="Select Engine.ini File",
+            filetypes=[("INI Files", "*.ini"), ("Text Files", "*.txt"), ("All Files", "*.*")]
+        )
+        if filepath:
+            with open(filepath, "r") as file:
+                content = file.read()
+            self.ini_text.delete("1.0", tk.END)
+            self.ini_text.insert("1.0", content)
+            print(f"SUCCESS: Loaded file from {filepath}")
+
+    def export_ini(self):
+        # Opens a file dialog to save the current text box contents to a file on the computer
+        filepath = filedialog.asksaveasfilename(
+            defaultextension=".ini",
+            title="Save Engine.ini File",
+            filetypes=[("INI Files", "*.ini"), ("Text Files", "*.txt"), ("All Files", "*.*")]
+        )
+        if filepath:
+            content = self.ini_text.get("1.0", tk.END).strip()
+            with open(filepath, "w") as file:
+                file.write(content)
+            print(f"SUCCESS: Saved tweaks to {filepath}")
 
     def save_profile(self):
         # Gathers input data from the text boxes and sends it to the controller
@@ -56,7 +99,8 @@ class EngineOptimizerView:
         self.controller.save_profile(game, gpu, ini_data)
 
     def load_profiles(self):
-        # Requests profiles, stores them in memory, and displays them in the list
+        # Updates the list mode requests profiles stores them in memory and displays them in the list
+        self.list_mode = "profiles"
         self.listbox.delete(0, tk.END)
         self.cached_profiles = self.controller.load_profiles()
         
@@ -64,7 +108,22 @@ class EngineOptimizerView:
             display_text = f"{p['game']} | {p['gpu']}"
             self.listbox.insert(tk.END, display_text)
 
-    def populate_fields(self, event):
+    def find_shops(self):
+        # Updates the list mode requests local shop data from the controller and displays it in the list
+        self.list_mode = "shops"
+        self.listbox.delete(0, tk.END)
+        shops = self.controller.fetch_shops("PC repair shop near me")
+        for shop in shops:
+            self.listbox.insert(tk.END, shop)
+
+    def handle_double_click(self, event):
+        # Determines which action to take based on the current list mode
+        if self.list_mode == "profiles":
+            self.populate_fields()
+        elif self.list_mode == "shops":
+            self.open_shop_search()
+
+    def populate_fields(self):
         # Identifies which item was clicked
         selected_indices = self.listbox.curselection()
         if not selected_indices:
@@ -84,17 +143,20 @@ class EngineOptimizerView:
         self.gpu_entry.insert(0, profile.get("gpu", ""))
         self.ini_text.insert("1.0", profile.get("ini_data", ""))
 
+    def open_shop_search(self):
+        # Opens a Google Search for the selected shop name and address
+        selected = self.listbox.get(tk.ACTIVE)
+        if selected:
+            # Encodes the shop string for a safe URL
+            query = urllib.parse.quote(selected)
+            url = f"https://www.google.com/search?q={query}"
+            webbrowser.open(url)
+            print(f"SUCCESS: Opening search for {selected}")
+
     def delete_profile(self):
         # Sends the selected game name from the list to the controller for deletion
         selected = self.listbox.get(tk.ACTIVE)
-        if selected:
+        if selected and self.list_mode == "profiles":
             game_name = selected.split(" | ")[0]
             self.controller.delete_profile(game_name)
             self.load_profiles()
-
-    def find_shops(self):
-        # Requests local shop data from the controller and displays it in the list
-        self.listbox.delete(0, tk.END)
-        shops = self.controller.fetch_shops("PC repair shop near me")
-        for shop in shops:
-            self.listbox.insert(tk.END, shop)
