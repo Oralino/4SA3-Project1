@@ -20,7 +20,7 @@ class EngineOptimizerView:
         # Creates the text entry field for the game name
         self.game_label = tk.Label(root, text="Game Name:")
         self.game_label.pack()
-        self.game_entry = tk.Entry(root)
+        self.game_entry = tk.Entry(root, width=50)
         self.game_entry.pack()
 
         # Creates the text entry field for the graphics card
