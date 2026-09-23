@@ -3,6 +3,10 @@
 McMaster University **4SA3** (Software Architecture) project. A Tkinter desktop app for keeping game
 `Engine.ini` tweaks organized by game and GPU, built around MVC and two design patterns.
 
+![Engine Optimizer window with a sample Palworld profile, its Engine.ini tweaks and the saved profile list](docs/main-window.png)
+
+*Shown with a sample profile.*
+
 ## Features
 
 - Save, load and delete a profile per game with its GPU and `Engine.ini` tweaks
